@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRIVSCAN — Índice de Privacidad para Alojamientos</title>
+  <meta name="description" content="PRIVSCAN evalúa el nivel de privacidad de hoteles y apartamentos en 4 dimensiones clave. Responde 11 preguntas y obtén tu puntuación." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── VARIABLES ─────────────────────────────────────────── */
+    :root {
+      --mint:   #15F6A3;
+      --blue:   #0F93FC;
+      --black:  #2F2F2F;
+      --gray:   #474C54;
+      --white:  #FFFFFF;
+      --bg:     #1E1E1E;
+      --nav:    #141414;
+      --card:   #252525;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    /* ─── RESET ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── KEYFRAMES ─────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes cardReveal {
+      from { opacity: 0; transform: translateY(32px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.12; }
+      50%       { opacity: 0.22; }
+    }
+    @keyframes barGrow {
+      from { width: 0%; }
+    }
+    @keyframes scoreCount {
+      from { opacity: 0; transform: scale(0.85); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ─── SCREENS ───────────────────────────────────────────── */
+    .ps-screen { display: none; }
+    .ps-screen.active { display: block; }
+
+    /* ─── NAV ───────────────────────────────────────────────── */
+    .ps-nav {
+      background: var(--nav);
+      padding: 0 2rem;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      animation: fadeIn 0.4s ease both;
+    }
+    .ps-logo { display: flex; align-items: center; cursor: pointer; height: 38px; }
+    .ps-logo img { height: 32px; width: auto; object-fit: contain; display: block; }
+    .ps-nav-links { display: flex; align-items: center; gap: 4px; }
+    .ps-nav-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.12); flex-shrink: 0; margin: 0 2px; }
+    .ps-nav-btn {
+      background: none; border: none;
+      color: rgba(255,255,255,0.45);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 6px 16px; height: 32px; cursor: pointer;
+      transition: all 0.18s ease; letter-spacing: 0.2px;
+      border-radius: 8px; white-space: nowrap;
+    }
+    .ps-nav-btn:hover {
+      color: var(--mint);
+      box-shadow: 0 0 0 1.5px rgba(21,246,163,0.45), 0 0 12px rgba(21,246,163,0.2);
+    }
+    .ps-nav-btn.active {
+      color: #1A1A1A; background: var(--mint); font-weight: 600;
+      box-shadow: 0 2px 10px rgba(21,246,163,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    /* ─── HERO ──────────────────────────────────────────────── */
+    .ps-hero {
+      background: var(--nav);
+      padding: 80px 2rem 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .ps-hero-glow {
+      position: absolute;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 640px; height: 420px;
+      background: radial-gradient(ellipse, rgba(21,246,163,0.15) 0%, transparent 70%);
+      pointer-events: none;
+      animation: glowPulse 4s ease-in-out infinite;
+    }
+    /* Elementos del hero con animación escalonada */
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(21,246,163,0.12);
+      border: 1px solid rgba(21,246,163,0.25);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 12px; color: var(--mint);
+      letter-spacing: 0.5px; margin-bottom: 28px; font-weight: 500;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+    .hero-h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(26px, 5vw, 48px);
+      font-weight: 700; color: var(--white);
+      line-height: 1.15; letter-spacing: -1.5px;
+      margin-bottom: 18px; max-width: 700px;
+      margin-left: auto; margin-right: auto;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.4s both;
+    }
+    .hero-h1 span { color: var(--mint); }
+    .hero-p {
+      color: rgba(255,255,255,0.55); font-size: 16px;
+      line-height: 1.7; max-width: 480px;
+      margin: 0 auto 40px; font-weight: 300;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.6s both;
+    }
+    .hero-cta {
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.8s both;
+    }
+
+    /* ─── STATS STRIP ───────────────────────────────────────── */
+    .ps-stats {
+      background: var(--nav);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 24px 2rem;
+      display: flex; justify-content: center;
+      gap: 48px; flex-wrap: wrap;
+    }
+    .ps-stat { text-align: center; }
+    .ps-stat-n {
+      font-family: 'Space Mono', monospace;
+      font-size: 22px; font-weight: 700;
+      color: var(--mint); display: block;
+    }
+    .ps-stat-l { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; }
+
+    /* ─── DIMENSION CARDS ───────────────────────────────────── */
+    .ps-dims { padding: 60px 2rem; max-width: 900px; margin: 0 auto; }
+    .ps-section-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px; letter-spacing: 2px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .ps-dim-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 16px;
+    }
+    .ps-dim-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 24px;
+      border-top: 2px solid var(--c);
+      position: relative; overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      /* Animación de entrada escalonada por índice */
+      opacity: 0;
+      animation: cardReveal 0.5s ease both;
+    }
+    .ps-dim-card:nth-child(1) { animation-delay: 0.1s; }
+    .ps-dim-card:nth-child(2) { animation-delay: 0.22s; }
+    .ps-dim-card:nth-child(3) { animation-delay: 0.34s; }
+    .ps-dim-card:nth-child(4) { animation-delay: 0.46s; }
+    .ps-dim-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 60px;
+      background: linear-gradient(180deg, rgba(var(--cr), 0.08) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .ps-dim-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      border-color: var(--c);
+    }
+    .ps-dim-card-icon { font-size: 22px; margin-bottom: 12px; }
+    .ps-dim-card-name { font-weight: 600; font-size: 15px; color: var(--white); margin-bottom: 4px; }
+    .ps-dim-card-weight {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px; color: var(--c); font-weight: 700; margin-bottom: 8px;
+    }
+    .ps-dim-card-desc { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+    .ps-cta-wrap { text-align: center; margin-top: 48px; }
+
+    /* ─── BUTTONS ───────────────────────────────────────────── */
+    .ps-btn-primary {
+      background: var(--mint); color: #1A1A1A; border: none;
+      padding: 14px 36px; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 600; border-radius: 100px;
+      cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: -0.2px;
+    }
+    .ps-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(21,246,163,0.3); }
+    .ps-btn-primary:active { transform: scale(0.98); }
+    .ps-btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 12px 28px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      color: rgba(255,255,255,0.7); border-radius: 100px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .ps-btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+    /* ─── QUESTIONNAIRE ─────────────────────────────────────── */
+    .ps-q-container { max-width: 760px; margin: 0 auto; padding: 40px 2rem 60px; }
+    .ps-q-header { margin-bottom: 36px; animation: fadeUp 0.5s ease both; }
+    .ps-q-header h2 {
+      font-family: 'Space Mono', monospace;
+      font-size: 22px; letter-spacing: -0.5px;
+      color: var(--white); margin-bottom: 8px;
+    }
+    .ps-q-header p { font-size: 14px; color: rgba(255,255,255,0.45); }
+    .ps-progress-bar {
+      height: 3px; background: rgba(255,255,255,0.08);
+      border-radius: 100px; margin-top: 16px; overflow: hidden;
+    }
+    .ps-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--mint), var(--blue));
+      border-radius: 100px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0%;
+    }
+    .ps-dim-section { margin-bottom: 36px; }
+    .ps-dim-label {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px; padding-bottom: 12px;
+      border-bottom: 1.5px solid var(--c);
+      animation: slideInLeft 0.4s ease both;
+    }
+    .ps-dim-label-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+    .ps-dim-label-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.5px; color: var(--white);
+    }
+    .ps-question {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 20px; margin-bottom: 12px;
+      transition: border-color 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+    .ps-q-text {
+      font-size: 15px; color: rgba(255,255,255,0.9);
+      line-height: 1.5; margin-bottom: 16px;
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    .ps-q-id {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px; color: rgba(255,255,255,0.25);
+      flex-shrink: 0; padding-top: 2px;
+    }
+    .ps-q-info { font-size: 12px; color: var(--blue); cursor: pointer; flex-shrink: 0; padding-top: 2px; }
+    .ps-q-info-text {
+      font-size: 12px; color: rgba(255,255,255,0.55);
+      background: rgba(15,147,252,0.08);
+      border-left: 2px solid var(--blue);
+      padding: 10px 12px; border-radius: 0 8px 8px 0;
+      margin-bottom: 14px; line-height: 1.5; display: none;
+    }
+    .ps-q-info-text.visible { display: block; }
+    .ps-options { display: flex; gap: 8px; }
+    .ps-opt {
+      flex: 1; padding: 10px 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer; transition: all 0.15s; text-align: center;
+    }
+    .ps-opt:hover { border-color: rgba(255,255,255,0.25); color: var(--white); }
+    .ps-opt.sel-good {
+      background: rgba(21,246,163,0.12); border-color: var(--mint);
+      color: var(--mint); font-weight: 600;
+      box-shadow: 0 0 10px rgba(21,246,163,0.25);
+    }
+    .ps-opt.sel-bad {
+      background: rgba(255,80,80,0.12); border-color: #FF5050;
+      color: #FF5050; font-weight: 600;
+      box-shadow: 0 0 10px rgba(255,80,80,0.25);
+    }
+    .ps-opt.sel-ns {
+      background: rgba(255,196,0,0.10); border-color: #FFC400;
+      color: #FFC400; font-weight: 600;
+      box-shadow: 0 0 10px rgba(255,196,0,0.2);
+    }
+    .ps-q-answered-good { border-color: rgba(21,246,163,0.25); }
+    .ps-q-answered-bad  { border-color: rgba(255,80,80,0.25); }
+    .ps-q-answered-ns   { border-color: rgba(255,196,0,0.2); }
+    .ps-submit-area { margin-top: 40px; text-align: center; }
+    .ps-submit-note { font-size: 13px; color: rgba(255,255,255,0.3); margin-top: 12px; }
+    #ps-unanswered-msg { color: #FF5050; font-size: 13px; margin-top: 12px; display: none; }
+
+    /* ─── RESULTS ───────────────────────────────────────────── */
+    .ps-r-container { max-width: 760px; margin: 0 auto; padding: 40px 2rem 60px; }
+    .ps-score-hero {
+      background: var(--nav);
+      border: 1px solid rgba(21,246,163,0.15);
+      border-radius: 20px; padding: 48px 32px;
+      text-align: center; margin-bottom: 32px;
+      position: relative; overflow: hidden;
+      animation: fadeUp 0.6s ease both;
+    }
+    .ps-score-hero::before {
+      content: '';
+      position: absolute; top: -80px; left: 50%;
+      transform: translateX(-50%);
+      width: 400px; height: 300px;
+      background: radial-gradient(ellipse, rgba(21,246,163,0.14) 0%, transparent 65%);
+      pointer-events: none;
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    .ps-score-label {
+      font-size: 12px; letter-spacing: 2px;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase; margin-bottom: 20px;
+      font-family: 'Space Mono', monospace;
+    }
+    .ps-stars-big { font-size: 40px; letter-spacing: 4px; margin-bottom: 16px; line-height: 1; }
+    .ps-score-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 56px; font-weight: 700; color: var(--white);
+      line-height: 1; margin-bottom: 8px; letter-spacing: -2px;
+      animation: scoreCount 0.5s ease 0.3s both;
+    }
+    .ps-score-tag {
+      display: inline-block;
+      background: rgba(21,246,163,0.12);
+      border: 1px solid rgba(21,246,163,0.3);
+      color: var(--mint); font-size: 13px; font-weight: 600;
+      padding: 5px 16px; border-radius: 100px; margin-bottom: 16px;
+    }
+    .ps-score-desc {
+      font-size: 14px; color: rgba(255,255,255,0.45);
+      max-width: 360px; margin: 0 auto; line-height: 1.6;
+    }
+    .ps-breakdown-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px; letter-spacing: 2px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ps-breakdown-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .ps-breakdown-item {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 16px;
+      border-left: 3px solid var(--c);
+      animation: slideInLeft 0.4s ease both;
+    }
+    .ps-breakdown-item:nth-child(1) { animation-delay: 0.15s; }
+    .ps-breakdown-item:nth-child(2) { animation-delay: 0.25s; }
+    .ps-breakdown-item:nth-child(3) { animation-delay: 0.35s; }
+    .ps-breakdown-item:nth-child(4) { animation-delay: 0.45s; }
+    .ps-bd-name { font-size: 14px; font-weight: 600; color: var(--white); flex: 1; }
+    .ps-bd-weight { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .ps-bd-bar-wrap { flex: 2; background: rgba(255,255,255,0.06); border-radius: 100px; height: 6px; overflow: hidden; }
+    .ps-bd-bar {
+      height: 6px; border-radius: 100px;
+      animation: barGrow 0.8s cubic-bezier(0.4,0,0.2,1) both;
+    }
+    .ps-bd-score {
+      font-family: 'Space Mono', monospace;
+      font-size: 15px; font-weight: 700; color: var(--white);
+      min-width: 36px; text-align: right;
+    }
+    .ps-r-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ─── ABOUT ─────────────────────────────────────────────── */
+    .ps-about-container { max-width: 720px; margin: 0 auto; padding: 60px 2rem; }
+    .ps-about-hero { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+    .ps-about-hero h2 {
+      font-family: 'Space Mono', monospace;
+      font-size: 26px; letter-spacing: -0.8px;
+      color: var(--white); margin-bottom: 12px;
+    }
+    .ps-about-hero h2 span { color: var(--mint); }
+    .ps-about-hero p { font-size: 16px; color: rgba(255,255,255,0.5); line-height: 1.75; max-width: 580px; }
+    .ps-about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 48px; }
+    .ps-about-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; padding: 24px;
+      animation: fadeUp 0.5s ease both;
+    }
+    .ps-about-card:nth-child(1) { animation-delay: 0.1s; }
+    .ps-about-card:nth-child(2) { animation-delay: 0.18s; }
+    .ps-about-card:nth-child(3) { animation-delay: 0.26s; }
+    .ps-about-card:nth-child(4) { animation-delay: 0.34s; }
+    .ps-about-card:nth-child(5) { animation-delay: 0.42s; }
+    .ps-about-card h4 { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+    .ps-about-card p { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+    .ps-about-card.full { grid-column: 1 / -1; }
+    .ps-contact-box {
+      background: var(--nav);
+      border: 1px solid rgba(21,246,163,0.15);
+      border-radius: 16px; padding: 32px;
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 20px;
+      animation: fadeUp 0.5s ease 0.5s both;
+    }
+    .ps-contact-box h3 {
+      font-family: 'Space Mono', monospace;
+      font-size: 16px; color: var(--white);
+      letter-spacing: -0.3px; margin-bottom: 6px;
+    }
+    .ps-contact-box p { font-size: 13px; color: rgba(255,255,255,0.4); }
+    .ps-version-tag {
+      text-align: center; margin-top: 40px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px; color: rgba(255,255,255,0.15); letter-spacing: 1px;
+    }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .ps-about-grid { grid-template-columns: 1fr; }
+      .ps-about-card.full { grid-column: 1; }
+      .ps-stats { gap: 28px; }
+      .ps-score-num { font-size: 44px; }
+      .ps-nav-btn { padding: 6px 10px; font-size: 12px; }
+      .ps-hero { padding: 60px 1.5rem; }
+      .ps-dims { padding: 40px 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="ps-app">
+
+  <!-- NAV -->
+  <nav class="ps-nav">
+    <div class="ps-logo" onclick="showScreen('home')">
+      <img id="ps-logo-img" alt="privscan" style="height:32px;width:auto;" />
+    </div>
+    <div class="ps-nav-links">
+      <button class="ps-nav-btn active" id="nav-home" onclick="showScreen('home')">Inicio</button>
+      <div class="ps-nav-sep"></div>
+      <button class="ps-nav-btn" id="nav-q" onclick="showScreen('questionnaire')">Evaluar</button>
+      <div class="ps-nav-sep"></div>
+      <button class="ps-nav-btn" id="nav-about" onclick="showScreen('about')">Proyecto</button>
+    </div>
+  </nav>
+
+  <!-- ── SCREEN: HOME ───────────────────────────────────────── -->
+  <div id="screen-home" class="ps-screen active">
+    <div class="ps-hero">
+      <div class="ps-hero-glow"></div>
+      <div class="hero-badge">Índice de Privacidad · v3.0</div>
+      <h1 class="hero-h1">¿Sabes cuánta<br/><span>privacidad</span> tienes<br/>en tu alojamiento?</h1>
+      <p class="hero-p">PRIVSCAN evalúa el nivel real de privacidad de hoteles y apartamentos en 4 dimensiones clave. Responde 11 preguntas y obtén tu puntuación.</p>
+      <div class="hero-cta">
+        <button class="ps-btn-primary" onclick="showScreen('questionnaire')">Iniciar evaluación →</button>
+      </div>
+    </div>
+    <div class="ps-stats">
+      <div class="ps-stat"><span class="ps-stat-n">11</span><span class="ps-stat-l">Preguntas</span></div>
+      <div class="ps-stat"><span class="ps-stat-n">4</span><span class="ps-stat-l">Dimensiones</span></div>
+      <div class="ps-stat"><span class="ps-stat-n">5★</span><span class="ps-stat-l">Escala</span></div>
+      <div class="ps-stat"><span class="ps-stat-n">RGPD</span><span class="ps-stat-l">Alineado</span></div>
+    </div>
+    <div class="ps-dims">
+      <p class="ps-section-title">Qué evaluamos</p>
+      <div class="ps-dim-grid">
+        <div class="ps-dim-card" style="--c:#15F6A3;--cr:21,246,163">
+          <div class="ps-dim-card-icon">🔒</div>
+          <div class="ps-dim-card-name">Física</div>
+          <div class="ps-dim-card-weight">35% del índice</div>
+          <div class="ps-dim-card-desc">Cerraduras, cortinas y barreras que controlas tú.</div>
+        </div>
+        <div class="ps-dim-card" style="--c:#0F93FC;--cr:15,147,252">
+          <div class="ps-dim-card-icon">📶</div>
+          <div class="ps-dim-card-name">Digital</div>
+          <div class="ps-dim-card-weight">35% del índice</div>
+          <div class="ps-dim-card-desc">WiFi, dispositivos inteligentes y puertos USB.</div>
+        </div>
+        <div class="ps-dim-card" style="--c:#9B8FFF;--cr:155,143,255">
+          <div class="ps-dim-card-icon">🧑‍💼</div>
+          <div class="ps-dim-card-name">Conductual</div>
+          <div class="ps-dim-card-weight">20% del índice</div>
+          <div class="ps-dim-card-desc">Respeto del personal a tus límites de privacidad.</div>
+        </div>
+        <div class="ps-dim-card" style="--c:#FF8A5C;--cr:255,138,92">
+          <div class="ps-dim-card-icon">📷</div>
+          <div class="ps-dim-card-name">Visual</div>
+          <div class="ps-dim-card-weight">10% del índice</div>
+          <div class="ps-dim-card-desc">Cámaras visibles y sensores de movimiento.</div>
+        </div>
+      </div>
+      <div class="ps-cta-wrap">
+        <button class="ps-btn-primary" onclick="showScreen('questionnaire')">Comenzar ahora →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: QUESTIONNAIRE ──────────────────────────────── -->
+  <div id="screen-questionnaire" class="ps-screen">
+    <div class="ps-q-container">
+      <div class="ps-q-header">
+        <h2>Evaluación de privacidad</h2>
+        <p>Responde las siguientes preguntas pensando en tu alojamiento actual. Puedes usar N/S si no estás seguro/a.</p>
+        <div class="ps-progress-bar"><div class="ps-progress-fill" id="ps-progress"></div></div>
+      </div>
+      <div id="ps-questions-wrap"></div>
+      <div class="ps-submit-area">
+        <button class="ps-btn-primary" onclick="calcResults()">Ver mi puntuación →</button>
+        <div class="ps-submit-note">Tu evaluación es anónima y no se almacena ningún dato.</div>
+        <div id="ps-unanswered-msg">Por favor, responde todas las preguntas antes de continuar.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: RESULTS ────────────────────────────────────── -->
+  <div id="screen-results" class="ps-screen">
+    <div class="ps-r-container">
+      <div class="ps-score-hero">
+        <div class="ps-score-label">Puntuación PRIVSCAN</div>
+        <div class="ps-stars-big" id="res-stars"></div>
+        <div class="ps-score-num" id="res-num"></div>
+        <div class="ps-score-tag" id="res-tag"></div>
+        <div class="ps-score-desc" id="res-desc"></div>
+      </div>
+      <p class="ps-breakdown-title">Desglose por dimensión</p>
+      <div class="ps-breakdown-list" id="res-breakdown"></div>
+      <div class="ps-r-actions">
+        <button class="ps-btn-primary" onclick="resetQ();showScreen('questionnaire')">Nueva evaluación</button>
+        <button class="ps-btn-secondary" onclick="showScreen('about')">Sobre PRIVSCAN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: ABOUT ──────────────────────────────────────── -->
+  <div id="screen-about" class="ps-screen">
+    <div class="ps-about-container">
+      <div class="ps-about-hero">
+        <h2>El proyecto <span>PRIVSCAN</span></h2>
+        <p>PRIVSCAN es el primer índice estandarizado de privacidad para alojamientos turísticos. Diseñado para integrarse en portales de reserva y como estándar de certificación para organismos de turismo.</p>
+      </div>
+      <div class="ps-about-grid">
+        <div class="ps-about-card"><h4>El problema</h4><p>Booking, Airbnb, Trivago y Hotels.com valoran limpieza, ubicación y precio. Ninguno mide privacidad. PRIVSCAN cubre ese vacío.</p></div>
+        <div class="ps-about-card"><h4>La solución</h4><p>Un índice de 1 a 5 estrellas, reproducible y comparable entre establecimientos, basado en 11 preguntas verificables.</p></div>
+        <div class="ps-about-card"><h4>Marco legal</h4><p>Alineado con RGPD (UE 2016/679), Directiva ePrivacy, LOPDGDD española, ISO/IEC 27001 y NIST Privacy Framework.</p></div>
+        <div class="ps-about-card"><h4>Modelos de uso</h4><p>Integración como sello en portales, certificación para organismos de turismo, o autoevaluación por el propio establecimiento.</p></div>
+        <div class="ps-about-card full"><h4>Estado del proyecto</h4><p>Metodología v3.0 completada. Nombre verificado como libre en EUIPO, pendiente de registro formal. Prototipo funcional en desarrollo. Buscando colaboradores en portales de reserva y organismos de turismo regionales.</p></div>
+      </div>
+      <div class="ps-contact-box">
+        <div>
+          <h3>¿Hablamos?</h3>
+          <p>Colaboraciones, certificaciones o inversión</p>
+        </div>
+        <button class="ps-btn-primary" onclick="window.location.href='mailto:cllancor.dev@gmail.com'">cllancor.dev@gmail.com →</button>
+      </div>
+      <div class="ps-version-tag">PRIVSCAN · Metodología v3.0 · Borrador Confidencial · CLLC · 2026</div>
+    </div>
+  </div>
+
+</div><!-- /ps-app -->
+
+<script>
+  /* ── LOGO (base64) ─────────────────────────────────────────── */
+  (function(){
+    const b64 = "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";
+    document.getElementById('ps-logo-img').src = 'data:image/png;base64,' + b64;
+  })();
+
+  /* ── DATOS ─────────────────────────────────────────────────── */
+  const QUESTIONS = [
+    { id:'F1', dim:'F', inverted:false, text:'¿La habitación tiene cerradura o pestillo interno que puedes controlar desde dentro?', info:null },
+    { id:'F2', dim:'F', inverted:false, text:'¿Las ventanas disponen de cortinas o elementos que impidan la visibilidad desde el exterior?', info:null },
+    { id:'F3', dim:'F', inverted:false, text:'¿Puedes cubrir fácilmente la mirilla o visor de la puerta desde el interior?', info:'La mirilla puede usarse desde el exterior para observar el interior. Comprueba si existe algún elemento (tapón, cubierta deslizante) que te permita bloquearla.' },
+    { id:'D1', dim:'D', inverted:true,  text:'¿Detectas algún nombre extraño o sospechoso entre las redes WiFi disponibles en la zona?', info:'Redes con nombres muy genéricos o similares al WiFi oficial pueden ser redes trampa (evil twin). Compara con el nombre oficial indicado por el alojamiento.' },
+    { id:'D2', dim:'D', inverted:false, text:'¿La red WiFi del alojamiento requiere contraseña segura (no es pública ni está sin clave)?', info:null },
+    { id:'D3', dim:'D', inverted:true,  text:'¿Los enchufes o dispositivos electrónicos de la habitación presentan luces, puertos o elementos sospechosos?', info:'Fíjate en enchufes con pequeños orificios en la carcasa, cargadores con LEDs inusuales, o dispositivos que no reconoces como parte del mobiliario habitual.' },
+    { id:'D4', dim:'D', inverted:false, text:'¿Puedes desactivar o desconectar asistentes de voz o televisores inteligentes presentes en la habitación?', info:'Los Smart TVs y altavoces inteligentes pueden recopilar audio de forma pasiva. Verifica si hay botón de silencio físico o si puedes desenchufarlos.' },
+    { id:'C1', dim:'C', inverted:false, text:'¿El personal del alojamiento respeta tu privacidad (no entra sin permiso ni llama sin motivo justificado)?', info:null },
+    { id:'C2', dim:'C', inverted:false, text:'¿Se te informó claramente al hacer el check-in sobre qué datos personales recoge el alojamiento y para qué?', info:null },
+    { id:'V1', dim:'V', inverted:true,  text:'¿Detectas cámaras visibles dentro o en los accesos inmediatos de la habitación?', info:null },
+    { id:'V2', dim:'V', inverted:true,  text:'¿Hay sensores de movimiento o luces que se activan sin razón aparente en la habitación?', info:'Observa si hay destellos LED o activaciones inesperadas al moverte por la habitación sin haber accionado ningún interruptor.' }
+  ];
+
+  const DIM_META = {
+    F:{ name:'Privacidad Física',     weight:0.35, color:'#15F6A3', label:'FÍSICA — 35%' },
+    D:{ name:'Privacidad Digital',    weight:0.35, color:'#0F93FC', label:'DIGITAL — 35%' },
+    C:{ name:'Privacidad Conductual', weight:0.20, color:'#9B8FFF', label:'CONDUCTUAL — 20%' },
+    V:{ name:'Visual / Vigilancia',   weight:0.10, color:'#FF8A5C', label:'VISUAL — 10%' }
+  };
+
+  const SCALE = [
+    { min:4.5, stars:5, tag:'★★★★★ Excelente',        desc:'Garantías máximas en todas las dimensiones. Tu alojamiento ofrece un nivel de privacidad excepcional.' },
+    { min:3.5, stars:4, tag:'★★★★ Privacidad Alta',    desc:'Nivel sólido con pequeñas áreas de mejora. Tu privacidad está bien protegida en general.' },
+    { min:2.5, stars:3, tag:'★★★ Privacidad Media',   desc:'Nivel aceptable con deficiencias identificables. Hay aspectos que podrían mejorar.' },
+    { min:1.5, stars:2, tag:'★★ Privacidad Baja',     desc:'Varias dimensiones presentan problemas. Considera tomar precauciones adicionales.' },
+    { min:0,   stars:1, tag:'★ Privacidad Muy Baja',  desc:'Carencias graves detectadas. Tu privacidad en este alojamiento está en riesgo.' }
+  ];
+
+  let answers = {};
+
+  /* ── LÓGICA ────────────────────────────────────────────────── */
+  function getValence(qid, val) {
+    if (val === 'ns') return 'ns';
+    const q = QUESTIONS.find(x => x.id === qid);
+    return (!q.inverted && val === 'si') || (q.inverted && val === 'no') ? 'good' : 'bad';
+  }
+
+  function buildQuestionnaire() {
+    const wrap = document.getElementById('ps-questions-wrap');
+    wrap.innerHTML = '';
+    ['F','D','C','V'].forEach(dim => {
+      const meta = DIM_META[dim];
+      const section = document.createElement('div');
+      section.className = 'ps-dim-section';
+      section.innerHTML = `<div class="ps-dim-label" style="--c:${meta.color}"><div class="ps-dim-label-dot"></div><div class="ps-dim-label-text">${meta.label}</div></div>`;
+      QUESTIONS.filter(q => q.dim === dim).forEach(q => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'ps-question';
+        qDiv.id = 'qblock-' + q.id;
+        const infoBtn  = q.info ? `<span class="ps-q-info" onclick="toggleInfo('${q.id}')">ℹ</span>` : '';
+        const infoText = q.info ? `<div class="ps-q-info-text" id="info-${q.id}">${q.info}</div>` : '';
+        qDiv.innerHTML = `
+          <div class="ps-q-text"><span class="ps-q-id">${q.id}</span><span>${q.text}</span>${infoBtn}</div>
+          ${infoText}
+          <div class="ps-options">
+            <button class="ps-opt" onclick="selectAnswer('${q.id}','si')">SÍ</button>
+            <button class="ps-opt" onclick="selectAnswer('${q.id}','no')">NO</button>
+            <button class="ps-opt" onclick="selectAnswer('${q.id}','ns')">N/S</button>
+          </div>`;
+        section.appendChild(qDiv);
+      });
+      wrap.appendChild(section);
+    });
+  }
+
+  function toggleInfo(qid) {
+    const el = document.getElementById('info-' + qid);
+    if (el) el.classList.toggle('visible');
+  }
+
+  function selectAnswer(qid, val) {
+    answers[qid] = val;
+    const block = document.getElementById('qblock-' + qid);
+    const btns  = block.querySelectorAll('.ps-opt');
+    btns.forEach(b => b.classList.remove('sel-good','sel-bad','sel-ns'));
+    block.classList.remove('ps-q-answered-good','ps-q-answered-bad','ps-q-answered-ns');
+    const valence = getValence(qid, val);
+    btns[['si','no','ns'].indexOf(val)].classList.add('sel-' + valence);
+    block.classList.add('ps-q-answered-' + valence);
+    document.getElementById('ps-progress').style.width =
+      (Object.keys(answers).length / QUESTIONS.length * 100) + '%';
+  }
+
+  function getScore(qid, val) {
+    const q   = QUESTIONS.find(x => x.id === qid);
+    const raw = val === 'si' ? 5 : val === 'no' ? 0 : 2.5;
+    return q.inverted ? (5 - raw) : raw;
+  }
+
+  function calcResults() {
+    const unanswered = QUESTIONS.filter(q => !answers[q.id]);
+    const msg = document.getElementById('ps-unanswered-msg');
+    if (unanswered.length > 0) {
+      msg.style.display = 'block';
+      document.getElementById('qblock-' + unanswered[0].id)
+        .scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    msg.style.display = 'none';
+
+    const dimScores = {};
+    ['F','D','C','V'].forEach(dim => {
+      const qs = QUESTIONS.filter(q => q.dim === dim);
+      dimScores[dim] = qs.reduce((s, q) => s + getScore(q.id, answers[q.id]), 0) / qs.length;
+    });
+    const global = dimScores.F*0.35 + dimScores.D*0.35 + dimScores.C*0.20 + dimScores.V*0.10;
+    const level  = SCALE.find(s => global >= s.min) || SCALE[4];
+
+    document.getElementById('res-stars').textContent = '★'.repeat(level.stars) + '☆'.repeat(5 - level.stars);
+    document.getElementById('res-num').textContent   = global.toFixed(2);
+    document.getElementById('res-tag').textContent   = level.tag;
+    document.getElementById('res-desc').textContent  = level.desc;
+
+    const bd = document.getElementById('res-breakdown');
+    bd.innerHTML = '';
+    ['F','D','C','V'].forEach(dim => {
+      const meta  = DIM_META[dim];
+      const score = dimScores[dim];
+      const item  = document.createElement('div');
+      item.className = 'ps-breakdown-item';
+      item.style.setProperty('--c', meta.color);
+      item.innerHTML = `
+        <div>
+          <div class="ps-bd-name">${meta.name}</div>
+          <div class="ps-bd-weight">${Math.round(meta.weight * 100)}% del índice</div>
+        </div>
+        <div class="ps-bd-bar-wrap">
+          <div class="ps-bd-bar" style="width:${score/5*100}%;background:${meta.color}"></div>
+        </div>
+        <div class="ps-bd-score">${score.toFixed(2)}</div>`;
+      bd.appendChild(item);
+    });
+
+    showScreen('results');
+    window.scrollTo(0, 0);
+  }
+
+  function resetQ() {
+    answers = {};
+    document.getElementById('ps-progress').style.width = '0%';
+    buildQuestionnaire();
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll('.ps-screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.ps-nav-btn').forEach(b => b.classList.remove('active'));
+    const map    = { home:'screen-home', questionnaire:'screen-questionnaire', results:'screen-results', about:'screen-about' };
+    const navMap = { home:'nav-home', questionnaire:'nav-q', results:'nav-q', about:'nav-about' };
+    document.getElementById(map[name]).classList.add('active');
+    if (navMap[name]) document.getElementById(navMap[name]).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  buildQuestionnaire();
+</script>
+</body>
+</html>
